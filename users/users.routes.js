@@ -1,19 +1,21 @@
 import express from "express";
-import bcrypt from "bcrypt";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
-import {
-  findUser,
-  readUsers,
-  saveUsers,
-  updateUser,
-} from "./users.store.js";
+import { findUser, updateUser } from "./users.store.js";
 
 function requireAuth(req, res, next) {
   if (!req.session.authenticated) {
     return res.status(401).json({
       error: "Unauthorized",
     });
+  }
+
+  next();
+}
+
+function requireAuthPage(req, res, next) {
+  if (!req.session.authenticated) {
+    return res.redirect("/login");
   }
 
   next();
@@ -40,60 +42,20 @@ function startAuthenticatedSession(req, user, res) {
 export function createUsersRouter() {
   const router = express.Router();
 
-  router.post("/register", async (req, res) => {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({
-        error: "Username and password are required",
-      });
-    }
-
-    const users = readUsers();
-    const exists = users.find((user) => user.username === username);
-
-    if (exists) {
-      return res.status(409).json({
-        error: "User already exists",
-      });
-    }
-
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    users.push({
-      username,
-      passwordHash,
-      mfaEnabled: false,
-      mfaSecret: null,
-      forceMfaReset: false,
-    });
-
-    saveUsers(users);
-
-    res.json({
-      message: "User registered",
-    });
-  });
-
-  router.post("/login", async (req, res) => {
+  router.post("/login", (req, res) => {
     const { username, password } = req.body;
     const user = findUser(username);
 
-    if (!user) {
-      return res.status(401).json({
-        error: "Invalid credentials",
-      });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
-
-    if (!validPassword) {
+    if (!user || user.password !== password) {
       return res.status(401).json({
         error: "Invalid credentials",
       });
     }
 
     req.session.username = username;
+    delete req.session.pendingMfa;
+    delete req.session.tempSecret;
+    delete req.session.forceMfaReset;
 
     if (user.forceMfaReset) {
       req.session.forceMfaReset = true;
@@ -113,7 +75,10 @@ export function createUsersRouter() {
       });
     }
 
-    startAuthenticatedSession(req, user, res);
+    res.json({
+      mfaSetupRequired: true,
+      message: "MFA setup required",
+    });
   });
 
   router.post("/mfa/setup", async (req, res) => {
@@ -217,9 +182,17 @@ export function createUsersRouter() {
     startAuthenticatedSession(req, user, res);
   });
 
-  router.get("/dashboard", requireAuth, (req, res) => {
+  router.get("/home", requireAuthPage, (req, res) => {
+    res.redirect("/");
+  });
+
+  router.get("/dashboard", requireAuthPage, (req, res) => {
+    res.redirect("/");
+  });
+
+  router.get("/me", requireAuth, (req, res) => {
     res.json({
-      message: `Welcome ${req.session.username}`,
+      username: req.session.username,
     });
   });
 

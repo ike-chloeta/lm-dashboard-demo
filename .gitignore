@@ -25,9 +25,7 @@ pids
 # coverage
 coverage/
 
-# build output
-dist/
-build/
+ 
 
 # macOS
 .DS_Store

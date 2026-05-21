@@ -1,0 +1,21 @@
+{
+  "name": "risk-outlook-bar-2",
+  "label": "Risk Outlook Bar",
+  "type": "widget",
+  "version": "1.20.0",
+  "exbVersion": "1.20.0",
+  "author": "Esri R&D Center Beijing",
+  "description": "Risk outlook bar 2 widget.",
+  "copyright": "",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "properties": {
+    "hasConfig": false
+  },
+  "translatedLocales": [
+    "en"
+  ],
+  "defaultSize": {
+    "width": 800,
+    "height": 500
+  }
+}
