@@ -42,6 +42,7 @@ Thumbs.db
 # temporary files
 tmp/
 temp/
+build/
 
 # npm package lock (optional)
 # package-lock.json
