@@ -7,6 +7,7 @@ import https from "node:https";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import zlib from "node:zlib";
+import { injectBuildMetadata } from "./inject-metadata.js";
 
 const PROJECT_ROOT = process.cwd();
 const BUILD_DIR = path.resolve(PROJECT_ROOT, "build");
@@ -54,6 +55,13 @@ async function main() {
     console.log(`Extracted ${extractedFiles} files.`);
     await fs.rm(archivePath, { force: true });
     console.log("Deleted downloaded archive.");
+
+    const { changed } = await injectBuildMetadata(extractDir);
+    console.log(
+      changed
+        ? "Injected platform metadata and crawler policy."
+        : "Platform metadata and crawler policy were already current.",
+    );
 
     await replaceBuildDirectory(extractDir, backupDir);
     console.log(`Build updated at ${path.relative(PROJECT_ROOT, BUILD_DIR)}.`);

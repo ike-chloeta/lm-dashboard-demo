@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "inject-metadata": "node scripts/inject-metadata.js",
     "update-build": "node scripts/update-build.js"
   },
   "dependencies": {
